@@ -1,6 +1,8 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
+    maven { url = 'https://repo.dairy.foundation/releases/' } // SolversLib, and Sloth for Pedro's tuner
+    maven { url = 'https://maven.brott.dev/' } // FTC Dashboard
 }
 
 dependencies {
@@ -13,5 +15,17 @@ dependencies {
     implementation 'org.firstinspires.ftc:FtcCommon:12.0.0'
     implementation 'org.firstinspires.ftc:Vision:12.0.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
+
+    // Pedro Pathing 3. revhub brings in com.pedropathing:core transitively.
+    implementation 'com.pedropathing:revhub:3.0.1'
+    // Registers Pedro's tuning OpModes; replaces the hand-copied Tuning.java of Pedro 2.
+    implementation 'com.pedropathing:tuning:1.0.1'
+
+    // SolversLib command framework, and its Pedro command wrappers (built against revhub 3).
+    implementation 'org.solverslib:core:0.3.6'
+    implementation 'org.solverslib:pedroPathing:0.3.6'
+
+    // FTC Dashboard: @Config in SwerveTeleOpConfig, MultipleTelemetry in SwerveTeleOp.
+    implementation 'com.acmerobotics.dashboard:dashboard:0.6.0'
 }
 
