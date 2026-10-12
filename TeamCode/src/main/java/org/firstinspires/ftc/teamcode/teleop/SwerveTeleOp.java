@@ -2,26 +2,38 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.ivy.IvyOpMode;
 import org.firstinspires.ftc.teamcode.subsystems.SwerveDrive;
 
+/**
+ * Driver-controlled swerve.
+ *
+ * <p>The loop itself lives in {@link IvyOpMode}: the drive's {@code periodic()} runs the module
+ * PIDs every loop, stick drive is the drive's default command, and the IMU reset is a button
+ * binding. Nothing here calls the hardware directly, so a command (an aim routine, an auto-align)
+ * can take the drive for a moment and the sticks pick it back up by themselves.
+ */
 @TeleOp(name = "Swerve TeleOp (Final)", group = "Main")
-public class SwerveTeleOp extends LinearOpMode {
+public class SwerveTeleOp extends IvyOpMode {
 
-    public long lastLoopTime = 0;
+    private SwerveDrive swerve;
+    private GoBildaPinpointDriver odo;
+
+    private long lastLoopTime = 0;
 
     @Override
-    public void runOpMode() {
-        // Setup Telemetry (Phone + Dashboard)
+    protected void onInit() {
+        // Telemetry to the phone and the Dashboard.
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        // Init Subsystems
-        SwerveDrive swerve = new SwerveDrive(telemetry, hardwareMap);
-        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+        swerve = register(new SwerveDrive(telemetry, hardwareMap));
+
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         odo.setOffsets(-170.5, 42.023, DistanceUnit.MM);
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(
@@ -29,58 +41,37 @@ public class SwerveTeleOp extends LinearOpMode {
                 GoBildaPinpointDriver.EncoderDirection.REVERSED
         );
         swerve.updateOdo(odo);
-        // Shooting Status
+
+        // Stick drive whenever no other command wants the drive. SwerveDrive applies the
+        // Dashboard speed scalars, so only the raw stick values and their signs belong here.
+        setDefaultCommand(swerve.driveCommand(
+                () -> gamepad1.left_stick_x,
+                () -> gamepad1.left_stick_y,
+                () -> -gamepad1.right_stick_x
+        ));
 
         telemetry.addData("Status", "Ready. Run 'Module Zeroing' if wheels are not aligned.");
-        telemetry.update();
+    }
 
-        waitForStart();
+    @Override
+    protected void onStart() {
+        // resetIMUCommand() takes no requirements, so re-zeroing never interrupts the drive.
+        bindings.whenPressed(
+                () -> gamepad1.options || gamepad1.start,
+                swerve.resetIMUCommand().then(Commands.instant(() -> gamepad1.rumble(500)))
+        );
+    }
 
-        while (opModeIsActive()) {
+    @Override
+    protected void onLoop() {
+        // The drive reads the Pinpoint heading itself inside drive(), so there is no odo.update()
+        // here any more -- a second read per loop only cost loop time.
 
-            odo.update(GoBildaPinpointDriver.ReadData.ONLY_UPDATE_HEADING);
+        long currentTime = System.currentTimeMillis();
+        long loopTime = currentTime - lastLoopTime;
+        lastLoopTime = currentTime;
 
-            // 1. Inputs
-            double driveScale = SwerveTeleOpConfig.DRIVE_SPEED_SCALAR;
-            double rotScale = SwerveTeleOpConfig.ROTATION_SPEED_SCALAR;
-
-            double strafe = gamepad1.left_stick_x * driveScale;
-            double forward = gamepad1.left_stick_y * driveScale;
-
-            double rot = -gamepad1.right_stick_x * rotScale;
-
-            // 2. Drive Command
-            // We pass ALL config values here so they update live!
-            swerve.drive(
-                    strafe, forward, rot,
-                    SwerveTeleOpConfig.module1Adjust,
-                    SwerveTeleOpConfig.module2Adjust,
-                    SwerveTeleOpConfig.module3Adjust,
-                    SwerveTeleOpConfig.Kp,
-                    SwerveTeleOpConfig.Kd,
-                    SwerveTeleOpConfig.Ki,
-                    SwerveTeleOpConfig.Kf,
-                    SwerveTeleOpConfig.Kl,
-                    SwerveTeleOpConfig.FIELD_CENTRIC,
-                    SwerveTeleOpConfig.IMU_POLARITY,
-                    SwerveTeleOpConfig.ROBOT_RADIUS
-            );
-
-            // 3. Reset IMU
-            if (gamepad1.options || gamepad1.start) {
-                swerve.resetIMU();
-                gamepad1.rumble(500);
-            }
-
-            long currentTime = System.currentTimeMillis();
-            long loopTime = currentTime - lastLoopTime;
-            lastLoopTime = currentTime;
-
-            telemetry.addData("Loop Time (ms)", loopTime);
-            telemetry.addData("Frequency (Hz)", 1000.0 / loopTime);
-
-            // 4. Update Telemetry
-            telemetry.update();
-        }
+        telemetry.addData("Loop Time (ms)", loopTime);
+        telemetry.addData("Frequency (Hz)", 1000.0 / loopTime);
     }
 }

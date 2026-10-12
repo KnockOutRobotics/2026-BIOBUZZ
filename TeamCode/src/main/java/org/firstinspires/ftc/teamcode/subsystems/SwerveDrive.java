@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.CommandBuilder;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,13 +14,16 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.ivy.Subsystem;
 import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
 import org.firstinspires.ftc.teamcode.maths.mathsOperations;
 import org.firstinspires.ftc.teamcode.maths.swerveKinematics;
 import org.firstinspires.ftc.teamcode.teleop.SwerveTeleOpConfig;
 import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 
-public class SwerveDrive {
+import java.util.function.DoubleSupplier;
+
+public class SwerveDrive implements Subsystem {
 
     private Telemetry telemetry;
 
@@ -76,6 +82,70 @@ public class SwerveDrive {
         // Only bottom motors are reversed (Coaxial standard)
         mod1m2.setDirection(DcMotorSimple.Direction.FORWARD);
         mod2m2.setDirection(DcMotorSimple.Direction.FORWARD);
+    }
+
+    // =========================================================
+    // Ivy integration
+    // =========================================================
+
+    private double inputStrafe = 0;
+    private double inputForward = 0;
+    private double inputRot = 0;
+
+    /**
+     * Stores the drive request that the next {@link #periodic()} applies, in the same -1..1 stick
+     * units {@link #drive} takes. Already scaled -- the command factories below do the scaling.
+     */
+    public void setDriveInput(double strafe, double forward, double rot) {
+        inputStrafe = strafe;
+        inputForward = forward;
+        inputRot = rot;
+    }
+
+    /**
+     * Runs the modules on the stored request with the live Dashboard values. Scheduled by
+     * {@link org.firstinspires.ftc.teamcode.ivy.IvyOpMode} without requirements, so the module
+     * PIDs keep running whichever command currently owns the drive.
+     */
+    @Override
+    public void periodic() {
+        driveWithConfig(inputStrafe, inputForward, inputRot);
+    }
+
+    /**
+     * Drives from the given stick suppliers for as long as it is scheduled, applying
+     * {@link SwerveTeleOpConfig#DRIVE_SPEED_SCALAR} and
+     * {@link SwerveTeleOpConfig#ROTATION_SPEED_SCALAR} each loop so both stay live-tunable.
+     * Zeroes the request when it ends, so an interruption cannot leave the robot driving.
+     */
+    public CommandBuilder driveCommand(DoubleSupplier strafe, DoubleSupplier forward, DoubleSupplier rot) {
+        return Command.build()
+                .requiring(this)
+                .setExecute(() -> setDriveInput(
+                        strafe.getAsDouble() * SwerveTeleOpConfig.DRIVE_SPEED_SCALAR,
+                        forward.getAsDouble() * SwerveTeleOpConfig.DRIVE_SPEED_SCALAR,
+                        rot.getAsDouble() * SwerveTeleOpConfig.ROTATION_SPEED_SCALAR))
+                .setDone(() -> false)
+                .setEnd(endCondition -> setDriveInput(0, 0, 0));
+    }
+
+    /**
+     * Holds the modules still while scheduled -- the heading lock stays armed, so this resists
+     * being pushed rather than going limp. Useful as a default command in autonomous.
+     */
+    public CommandBuilder stopCommand() {
+        return Command.build()
+                .requiring(this)
+                .setStart(() -> setDriveInput(0, 0, 0))
+                .setDone(() -> false);
+    }
+
+    /**
+     * Re-zeroes the heading. Deliberately requirement-free: it only rewrites the IMU offsets, so
+     * it must not interrupt whatever is driving.
+     */
+    public CommandBuilder resetIMUCommand() {
+        return Commands.instant(this::resetIMU);
     }
 
     public void driveWithConfig(double strafe, double forward, double rot) {

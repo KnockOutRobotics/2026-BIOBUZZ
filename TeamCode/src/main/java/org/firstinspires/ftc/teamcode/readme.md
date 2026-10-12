@@ -1,3 +1,44 @@
+## Command framework: Ivy
+
+Subsystems and OpModes in this module run on [Ivy](https://pedropathing.com/docs/ivy), Pedro
+Pathing's command library (`com.pedropathing.ivy:pedro`). It replaced SolversLib, so there is one
+command framework here, not two.
+
+The glue lives in `ivy/`:
+
+| | |
+| --- | --- |
+| `Subsystem` | `periodic()` (the closed loop) and an optional `defaultCommand()`. Ivy requirements are plain objects, so the subsystem instance is its own requirement. |
+| `IvyOpMode` | The OpMode base class. Owns the `Scheduler` loop; subclasses implement `onInit()`/`onStart()`/`onLoop()` and never touch hardware directly. |
+| `Bindings` | Button-to-command bindings with edge detection (`whenPressed`, `whenReleased`, `whileHeld`), polled once per loop. Ivy has no trigger type of its own. |
+
+A subsystem exposes its motions as factory methods that return
+`Command.build().requiring(this)...` -- see `subsystems/Turret.java` -- so two commands can never
+drive the same hardware at once. An OpMode then reads as a list of what should run:
+
+```java
+@TeleOp
+public class Example extends IvyOpMode {
+
+    private Turret turret;
+
+    @Override
+    protected void onInit() {
+        turret = register(new Turret(hardwareMap));
+        setDefaultCommand(turret.jog(() -> gamepad1.right_stick_x * 90));
+    }
+
+    @Override
+    protected void onStart() {
+        bindings.whenPressed(() -> gamepad1.dpad_up, turret.goToAngle(0));
+    }
+}
+```
+
+Worked examples: `teleop/SwerveTeleOp.java` and `teleop/TurretTeleOp.java` for teleop,
+`samples/PedroAutoSample.java` for an autonomous routine, and
+`samples/PedroCommandsReference.java` for the Pedro commands and the composition operators.
+
 ## TeamCode Module
 
 Welcome!

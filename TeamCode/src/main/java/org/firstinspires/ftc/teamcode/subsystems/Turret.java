@@ -1,17 +1,24 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.arcrobotics.ftclib.controller.PIDFController;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.CommandBuilder;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.ivy.Subsystem;
 import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
 import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 
-public class Turret {
+import java.util.function.DoubleSupplier;
+
+public class Turret implements Subsystem {
     //do we want positional PID turret or Velocity PID Turret???
     //Positional determine desired position for us to be inline with target
     //Velocity: adjust velocity to stay in line with turret
@@ -78,6 +85,7 @@ public class Turret {
         return azimuthMotor.getCurrentPosition() / SubsystemConstants.Turret.TICKS_PER_REV * 360.0;
     }
 
+    @Override
     public void periodic(){
         power = pidController.calculate(getCurrentAngleDegrees(), targetAngleDegrees);
         azimuthMotor.setPower(power);
@@ -87,13 +95,72 @@ public class Turret {
         return power;
     }
 
+    /**
+     * Whether the azimuth is within the PID tolerance of the target. False until {@link #periodic()}
+     * has run the controller against the current target, so a command that has just moved the
+     * target cannot read a stale "at target" from the previous one.
+     */
+    public boolean atTarget() {
+        return pidController.getSetPoint() == targetAngleDegrees && pidController.atSetPoint();
+    }
+
+    // =========================================================
+    // Ivy commands
+    //
+    // The PID itself lives in periodic(), which IvyOpMode runs every loop regardless of what is
+    // scheduled; these commands only move the target and report when it has been reached. Each
+    // one requires this subsystem, so two of them can never fight over the azimuth.
+    // =========================================================
+
+    /** Turns to a fixed angle and finishes once {@link #atTarget()}. */
+    public CommandBuilder goToAngle(double targetAngle) {
+        return Command.build()
+                .requiring(this)
+                .setStart(() -> setTargetAngleDegrees(targetAngle))
+                .setDone(this::atTarget);
+    }
+
+    /**
+     * Tracks a moving target angle (from vision, or from the robot pose and the goal pose) for as
+     * long as it is scheduled. Never finishes on its own -- cancel it, race it against something,
+     * or let a higher-priority command interrupt it.
+     */
+    public CommandBuilder track(DoubleSupplier targetAngle) {
+        return Command.build()
+                .requiring(this)
+                .setExecute(() -> setTargetAngleDegrees(targetAngle.getAsDouble()))
+                .setDone(() -> false);
+    }
+
+    /**
+     * Walks the target angle at {@code degreesPerSecond} while scheduled, for manual aiming off a
+     * stick or the bumpers.
+     */
+    public CommandBuilder jog(DoubleSupplier degreesPerSecond) {
+        ElapsedTime dt = new ElapsedTime();
+        return Command.build()
+                .requiring(this)
+                .setStart(dt::reset)
+                .setExecute(() -> {
+                    setTargetAngleDegrees(targetAngleDegrees + degreesPerSecond.getAsDouble() * dt.seconds());
+                    dt.reset();
+                })
+                .setDone(() -> false);
+    }
+
+    /** Freezes the turret where it currently is. */
+    public CommandBuilder hold() {
+        return Commands.instant(() -> setTargetAngleDegrees(getCurrentAngleDegrees()))
+                .requiring(this);
+    }
+
     //TODO
     //1. encoder for current position
     //2. wrap around logic
-    //3. aiming logic. how to set target angle
+    //3. aiming logic. how to set target atngle
     //4. goal coordinate for aiming
     //5. tuning
-    //6. opmode api
+    //6. opmode api -- done: the Ivy commands above, driven by TurretTeleOp
 
 
     //absolute encoder

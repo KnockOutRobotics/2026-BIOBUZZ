@@ -2,52 +2,56 @@ package org.firstinspires.ftc.teamcode.samples;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.ManualDrive;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.util.TelemetryData;
 
+import org.firstinspires.ftc.teamcode.ivy.IvyOpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-/** Reference follower-driven teleop. Disabled until Constants can build a follower. */
+/** Reference follower-driven teleop, on Ivy. Disabled until Constants can build a follower. */
 @Disabled
 @TeleOp
-public class PedroTeleOpSample extends CommandOpMode {
+public class PedroTeleOpSample extends IvyOpMode {
 
-    public Follower follower;
-    public TelemetryData telemetryData = new TelemetryData(telemetry);
+    private Follower follower;
 
     @Override
-    public void initialize() {
+    protected void onInit() {
         follower = Constants.createFollower(hardwareMap);
-        super.reset();
+
+        // Ivy requirements are plain objects, so the follower itself is the requirement here --
+        // it does not have to be a Subsystem. Any command that follows a path should require it
+        // too, and then it cannot be fighting the sticks.
+        setDefaultCommand(Command.build()
+                .requiring(follower)
+                .setExecute(() -> follower.manual(
+                        // Field-centric drive. For robot-centric, use the three-argument
+                        // follower.manual(-left_stick_y, -left_stick_x, -right_stick_x) instead.
+                        ManualDrive.fieldCentric(
+                                -gamepad1.left_stick_y,
+                                -gamepad1.left_stick_x,
+                                -gamepad1.right_stick_x,
+                                follower.pose().heading()
+                        )))
+                .setDone(() -> false));
 
         // Pedro 3 has no startTeleopDrive(): the follower enters manual mode on the first
         // manual() call and leaves it when a path is followed.
     }
 
     @Override
-    public void run() {
-        super.run();
+    protected void onStart() {
+        // The follower has to be updated every loop, whether it is following a path or being
+        // driven. Requirement-free, and scheduled first, so it runs ahead of everything else.
+        schedule(Commands.infinite(follower::update));
+    }
 
-        /* Robot-Centric Drive
-        follower.manual(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
-        */
-
-        // Field-Centric Drive
-        follower.manual(
-                ManualDrive.fieldCentric(
-                        -gamepad1.left_stick_y,
-                        -gamepad1.left_stick_x,
-                        -gamepad1.right_stick_x,
-                        follower.pose().heading()
-                )
-        );
-        follower.update();
-
-        telemetryData.addData("X", follower.pose().x());
-        telemetryData.addData("Y", follower.pose().y());
-        telemetryData.addData("Heading", follower.pose().heading());
-        telemetryData.update();
+    @Override
+    protected void onLoop() {
+        telemetry.addData("X", follower.pose().x());
+        telemetry.addData("Y", follower.pose().y());
+        telemetry.addData("Heading", follower.pose().heading());
     }
 }

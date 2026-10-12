@@ -1,7 +1,7 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
-    maven { url = 'https://repo.dairy.foundation/releases/' } // SolversLib, and Sloth for Pedro's tuner
+    maven { url = 'https://repo.dairy.foundation/releases/' } // Sloth, for Pedro's tuner
     maven { url = 'https://maven.brott.dev/' } // FTC Dashboard
 }
 
@@ -21,9 +21,9 @@ dependencies {
     // Registers Pedro's tuning OpModes; replaces the hand-copied Tuning.java of Pedro 2.
     implementation 'com.pedropathing:tuning:1.0.1'
 
-    // SolversLib command framework, and its Pedro command wrappers (built against revhub 3).
-    implementation 'org.solverslib:core:0.3.6'
-    implementation 'org.solverslib:pedroPathing:0.3.6'
+    // Ivy command framework, and its Pedro command wrappers (follow/hold).
+    // 'pedro' brings in com.pedropathing.ivy:core transitively.
+    implementation 'com.pedropathing.ivy:pedro:1.1.1'
 
     // FTC Dashboard: @Config in SwerveTeleOpConfig, MultipleTelemetry in SwerveTeleOp.
     implementation 'com.acmerobotics.dashboard:dashboard:0.6.0'

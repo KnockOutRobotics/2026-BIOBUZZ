@@ -1,26 +1,29 @@
 package org.firstinspires.ftc.teamcode.samples;
 
+import static com.pedropathing.ivy.commands.Commands.instant;
+import static com.pedropathing.ivy.commands.Commands.waitMs;
+import static com.pedropathing.ivy.groups.Groups.sequential;
+import static com.pedropathing.ivy.pedro.PedroCommands.follow;
+import static com.pedropathing.ivy.pedro.PedroCommands.hold;
+
 import com.pedropathing.api.Paths;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
-import com.seattlesolvers.solverslib.util.TelemetryData;
 
+import org.firstinspires.ftc.teamcode.ivy.IvyOpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-/** Reference autonomous structure. Disabled until Constants can build a follower. */
+/** Reference autonomous structure, on Ivy. Disabled until Constants can build a follower. */
 @Disabled
 @Autonomous
-public class PedroAutoSample extends CommandOpMode {
+public class PedroAutoSample extends IvyOpMode {
 
     private Follower follower;
-    public TelemetryData telemetryData = new TelemetryData(telemetry);
 
     // Poses
     private final Pose startPose = new Pose(9, 111, Math.toRadians(-90));
@@ -69,81 +72,88 @@ public class PedroAutoSample extends CommandOpMode {
         ).linear(scorePose.heading(), parkPose.heading());
     }
 
-    // Mechanism commands - replace these with your actual subsystem commands
-    private InstantCommand openOuttakeClaw() {
-        return new InstantCommand(() -> {
+    // Mechanism commands - replace these with your actual subsystem commands.
+    // A real one is a factory on the subsystem, e.g. turret.goToAngle(90), so that it carries its
+    // requirements and two routines can never drive the same hardware at once.
+    private Command openOuttakeClaw() {
+        return instant(() -> {
             // Example: outtakeSubsystem.openClaw();
         });
     }
 
-    private InstantCommand grabSample() {
-        return new InstantCommand(() -> {
+    private Command grabSample() {
+        return instant(() -> {
             // Example: intakeSubsystem.grabSample();
         });
     }
 
-    private InstantCommand scoreSample() {
-        return new InstantCommand(() -> {
+    private Command scoreSample() {
+        return instant(() -> {
             // Example: outtakeSubsystem.scoreSample();
         });
     }
 
-    private InstantCommand level1Ascent() {
-        return new InstantCommand(() -> {
+    private Command level1Ascent() {
+        return instant(() -> {
             // Example: hangSubsystem.level1Ascent();
         });
     }
 
     @Override
-    public void initialize() {
-        super.reset();
-
-        // Initialize follower
+    protected void onInit() {
         follower = Constants.createFollower(hardwareMap);
         follower.setPose(startPose);
         buildPaths();
-
-        // Schedule the autonomous sequence
-        schedule(
-                // Score preload
-                new FollowPathCommand(follower, scorePreload),
-                openOuttakeClaw(),
-                new WaitCommand(1000), // Wait 1 second
-
-                // First pickup cycle
-                // Sets globalMaxPower to 50% for all future paths
-                // (unless a custom maxPower is given)
-                new FollowPathCommand(follower, grabPickup1).setGlobalMaxPower(0.5),
-                grabSample(),
-                new FollowPathCommand(follower, scorePickup1),
-                scoreSample(),
-
-                // Second pickup cycle
-                new FollowPathCommand(follower, grabPickup2),
-                grabSample(),
-                new FollowPathCommand(follower, scorePickup2, 1.0), // Overrides maxPower to 100% for this path only
-                scoreSample(),
-
-                // Third pickup cycle
-                new FollowPathCommand(follower, grabPickup3),
-                grabSample(),
-                new FollowPathCommand(follower, scorePickup3),
-                scoreSample(),
-
-                // Park
-                new FollowPathCommand(follower, park, false), // park with holdEnd false
-                level1Ascent()
-        );
     }
 
     @Override
-    public void run() {
-        super.run();
-        follower.update();
+    protected void onStart() {
+        // The follower has to be updated every loop. Requirement-free, and scheduled before the
+        // routine, so it runs ahead of the path commands each loop.
+        schedule(Commands.infinite(follower::update));
 
-        telemetryData.addData("X", follower.pose().x());
-        telemetryData.addData("Y", follower.pose().y());
-        telemetryData.addData("Heading", follower.pose().heading());
-        telemetryData.update();
+        // sequential() runs one command at a time, in order, and finishes with the last one.
+        // Swap in parallel()/race()/deadline() where a mechanism should move while driving --
+        // e.g. follow(follower, grabPickup1).with(intake.run()).
+        schedule(sequential(
+                // Score preload
+                follow(follower, scorePreload),
+                openOuttakeClaw(),
+                waitMs(1000), // Wait 1 second
+
+                // First pickup cycle
+                follow(follower, grabPickup1),
+                grabSample(),
+                follow(follower, scorePickup1),
+                scoreSample(),
+
+                // Second pickup cycle
+                follow(follower, grabPickup2),
+                grabSample(),
+                follow(follower, scorePickup2),
+                scoreSample(),
+
+                // Third pickup cycle
+                follow(follower, grabPickup3),
+                grabSample(),
+                follow(follower, scorePickup3),
+                scoreSample(),
+
+                // Park, then sit on the end pose instead of coasting off it
+                follow(follower, park),
+                hold(follower, parkPose),
+                level1Ascent()
+        ));
+
+        // Pedro 2's per-path maxPower/holdEnd arguments are gone: speed limits live in the
+        // Algorithm config in Constants, and follower.holdEnd.set(...) decides whether a finished
+        // path is held. hold(follower, pose) above is the explicit version of holding a point.
+    }
+
+    @Override
+    protected void onLoop() {
+        telemetry.addData("X", follower.pose().x());
+        telemetry.addData("Y", follower.pose().y());
+        telemetry.addData("Heading", follower.pose().heading());
     }
 }
