@@ -1,10 +1,15 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.arcrobotics.ftclib.controller.PIDFController;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
+import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 
 public class Turret {
     //do we want positional PID turret or Velocity PID Turret???
@@ -29,13 +34,35 @@ public class Turret {
     //We are using a positional Controller YAY
 
     //I guess we should use a PIDF controller
-    private double targetAngleDegrees; //degrees
+    private double targetAngleDegrees; //degreesdfCoefficients.)
     private double currentAngleDegrees;
-    private PIDFCoefficients pidCoefficients;
-    private PIDFCoefficients pidController;
+    private PIDFController pidController = new PIDFController(
+            SubsystemConstants.Turret.P,
+            SubsystemConstants.Turret.I,
+            SubsystemConstants.Turret.D,
+            SubsystemConstants.Turret.F
+    );
 
     //motors be important
     private DcMotorEx azimuthMotor;
+    private double power;
+
+    public Turret(HardwareMap hardwareMap){
+        azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor"));
+        azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        resetEncoder();
+
+        currentAngleDegrees = getCurrentAngleDegrees();
+        targetAngleDegrees = 0;
+
+        pidController.setTolerance(10);
+    }
+
+    private void resetEncoder(){
+        azimuthMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        azimuthMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
 
     ///set target position
     /// @param targetAngle target angle in degrees
@@ -47,5 +74,39 @@ public class Turret {
         return targetAngleDegrees;
     }
 
+    public double getCurrentAngleDegrees() {
+        return azimuthMotor.getCurrentPosition() / SubsystemConstants.Turret.TICKS_PER_REV * 360.0;
+    }
 
+    public void periodic(){
+        power = pidController.calculate(getCurrentAngleDegrees(), targetAngleDegrees);
+        azimuthMotor.setPower(power);
+    }
+
+    public double getPowerSetpoint() {
+        return power;
+    }
+
+    //TODO
+    //1. encoder for current position
+    //2. wrap around logic
+    //3. aiming logic. how to set target angle
+    //4. goal coordinate for aiming
+    //5. tuning
+    //6. opmode api
+
+
+    //absolute encoder
+    //need to have a total encoder reading too
+    //this be helpful for wrap around
+    //absolute encoder help with angle according to robot
+    //and zeroed angle
+    //total angle help with wrap around
+    //-# doesn't exist for wraparoudn and compliment angle math
+    //when using a aboslute encoder
+    private double totalPostition = 0;
+    private double lastPosition = 0;
+    private void updateTotalPosition(){
+        
+    }
 }
