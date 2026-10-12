@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.arcrobotics.ftclib.controller.PIDFController;
-import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.CommandBuilder;
 import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,13 +9,10 @@ import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.ivy.Subsystem;
 import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
 import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
-
-import java.util.function.DoubleSupplier;
 
 public class Turret implements Subsystem {
     //do we want positional PID turret or Velocity PID Turret???
@@ -95,64 +91,28 @@ public class Turret implements Subsystem {
         return power;
     }
 
-    /**
-     * Whether the azimuth is within the PID tolerance of the target. False until {@link #periodic()}
-     * has run the controller against the current target, so a command that has just moved the
-     * target cannot read a stale "at target" from the previous one.
-     */
-    public boolean atTarget() {
-        return pidController.getSetPoint() == targetAngleDegrees && pidController.atSetPoint();
-    }
-
     // =========================================================
     // Ivy commands
     //
-    // The PID itself lives in periodic(), which IvyOpMode runs every loop regardless of what is
-    // scheduled; these commands only move the target and report when it has been reached. Each
-    // one requires this subsystem, so two of them can never fight over the azimuth.
+    // The PID lives in periodic(), which IvyOpMode runs every loop regardless of what is
+    // scheduled, so a command only has to move the target. Requiring this subsystem is what stops
+    // two commands aiming the azimuth at once.
     // =========================================================
 
-    /** Turns to a fixed angle and finishes once {@link #atTarget()}. */
+    /** Ivy counterpart of {@link #setTargetAngleDegrees(double)}. */
     public CommandBuilder goToAngle(double targetAngle) {
-        return Command.build()
-                .requiring(this)
-                .setStart(() -> setTargetAngleDegrees(targetAngle))
-                .setDone(this::atTarget);
+        return Commands.instant(() -> setTargetAngleDegrees(targetAngle)).requiring(this);
     }
 
-    /**
-     * Tracks a moving target angle (from vision, or from the robot pose and the goal pose) for as
-     * long as it is scheduled. Never finishes on its own -- cancel it, race it against something,
-     * or let a higher-priority command interrupt it.
+    /**wrap around funciotn
+     * @param target angle
+     * takes shortest path to angle and sees if it goes outside of bounds
+     * if it does send turret to complementry angle of current position
+     * then tries again.
+     * @retruns a registered command to either continue to target or a new commadn to go
+     * to complementry angle and then targeted angle
      */
-    public CommandBuilder track(DoubleSupplier targetAngle) {
-        return Command.build()
-                .requiring(this)
-                .setExecute(() -> setTargetAngleDegrees(targetAngle.getAsDouble()))
-                .setDone(() -> false);
-    }
 
-    /**
-     * Walks the target angle at {@code degreesPerSecond} while scheduled, for manual aiming off a
-     * stick or the bumpers.
-     */
-    public CommandBuilder jog(DoubleSupplier degreesPerSecond) {
-        ElapsedTime dt = new ElapsedTime();
-        return Command.build()
-                .requiring(this)
-                .setStart(dt::reset)
-                .setExecute(() -> {
-                    setTargetAngleDegrees(targetAngleDegrees + degreesPerSecond.getAsDouble() * dt.seconds());
-                    dt.reset();
-                })
-                .setDone(() -> false);
-    }
-
-    /** Freezes the turret where it currently is. */
-    public CommandBuilder hold() {
-        return Commands.instant(() -> setTargetAngleDegrees(getCurrentAngleDegrees()))
-                .requiring(this);
-    }
 
     //TODO
     //1. encoder for current position
@@ -160,7 +120,7 @@ public class Turret implements Subsystem {
     //3. aiming logic. how to set target atngle
     //4. goal coordinate for aiming
     //5. tuning
-    //6. opmode api -- done: the Ivy commands above, driven by TurretTeleOp
+    //6. opmode api
 
 
     //absolute encoder
