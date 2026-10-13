@@ -39,6 +39,8 @@ public class Turret implements Subsystem {
   public Turret(HardwareMap hardwareMap) {
     azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor"));
     azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    // TODO set the motor direction so +power moves toward +angle
+    // TODO stop zeroing here; zero only when homed (see the TODO list at the bottom)
     resetEncoder();
 
     targetAngleDegrees = 0;
@@ -143,15 +145,33 @@ public class Turret implements Subsystem {
     return Commands.instant(() -> setTargetAngleDegrees(targetAngle)).requiring(this);
   }
 
-  // TODO
-  // 1. absolute encoder / homing so the zero survives between OpModes
-  // 2. aiming logic: how to set the target angle
-  // 3. goal coordinate for aiming
-  // 4. tuning
-  // 5. opmode api
+  // TODO (also tracked in TODO.md)
+  // Homing -- 1:1 incremental encoder, so the zero has to come from somewhere:
+  //   [ ] pick: carry the encoder count across OpModes from a known start position,
+  //       a limit switch, or driving into a hardstop and detecting the stall (velocity ~0
+  //       and current high for ~100 ms)
+  //   [ ] add offsetTicks + zeroAt(knownAngle) and a static `homed` flag
+  //   [ ] homeCommand(): drive slowly until switch/stall, then zeroAt(); swappable detection
+  //   [ ] skip the PID in periodic() while not homed (except during homing)
+  //   [ ] driver button to re-home or manually zeroAt(0)
+  //   [ ] limit switch only: re-zero whenever the turret passes it
+  // Hardware / config:
+  //   [ ] TICKS_PER_REV = encoder counts per rev (1:1 with the turret)
+  //   [ ] motor direction (constructor)
+  //   [ ] confirm MIN_ANGLE / MAX_ANGLE against the cable wrap
+  // Control:
+  //   [ ] command that waits for isAtTarget(), for shooting in auto
+  //   [ ] tune P/I/D/F, I_LIMIT, TOLERANCE_DEGREES, MAX_POWER
+  //   [ ] maybe feedforward to cancel chassis rotation while aiming
+  // Aiming:
+  //   [ ] goal coordinate per alliance (Pedro field coordinates)
+  //   [ ] target angle = atan2(goal - robot position) - robot heading, from PedroDrive.pose()
+  //   [ ] aim command that updates the target every loop
+  // OpMode:
+  //   [ ] register in PedroSwerveTeleOp / PedroSwerveAuto, add telemetry (target, angle, power)
 
-  // Absolute encoder: gives the angle relative to the robot and a fixed zero. A running total
-  // (no wrap at +/-180) is still needed for the wrap-around math against the turret limits.
+  // Unused for now: a running total (no wrap at +/-180) for the wrap-around math, if the
+  // encoder ends up being read as an angle rather than a raw count.
   private double totalPosition = 0;
   private double lastPosition = 0;
 
