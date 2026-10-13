@@ -7,6 +7,7 @@ import com.pedropathing.ivy.behaviors.ConflictBehavior;
 import com.pedropathing.ivy.behaviors.EndCondition;
 import com.pedropathing.ivy.behaviors.InterruptedBehavior;
 import com.pedropathing.ivy.commands.Commands;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import java.util.ArrayList;
@@ -98,10 +99,19 @@ public abstract class IvyOpMode extends LinearOpMode {
         // Ivy's scheduler is static, so commands from the previous OpMode would otherwise carry over.
         Scheduler.reset();
 
+        // One bulk read per hub per loop, instead of one bus transaction per encoder or analog
+        // read. The cache is cleared at the top of every loop, so values are never more than one
+        // loop old.
+        List<LynxModule> hubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : hubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
+
         onInit();
         telemetry.update();
 
         while (opModeInInit()) {
+            clearBulkCache(hubs);
             onInitLoop();
             telemetry.update();
         }
@@ -125,6 +135,7 @@ public abstract class IvyOpMode extends LinearOpMode {
         onStart();
 
         while (opModeIsActive()) {
+            clearBulkCache(hubs);
             bindings.poll();
 
             // A default whose subsystem is busy is blocked and dropped, and tried again next loop.
@@ -141,6 +152,12 @@ public abstract class IvyOpMode extends LinearOpMode {
 
         onStop();
         Scheduler.reset();
+    }
+
+    private static void clearBulkCache(List<LynxModule> hubs) {
+        for (LynxModule hub : hubs) {
+            hub.clearBulkCache();
+        }
     }
 
     /**

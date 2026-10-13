@@ -1,139 +1,161 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.ivy.CommandBuilder;
 import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.ivy.Subsystem;
-import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
+import org.firstinspires.ftc.teamcode.maths.PIDFController;
 import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
 
+/**
+ * Positional turret: the target angle comes from the robot's pose on the field and the known
+ * goal pose, and a PIDF loop drives the azimuth there. Chosen over a velocity loop that chases a
+ * turret-mounted Limelight's AprilTag offset because it is less prone to oscillation and lets
+ * vision be mounted anywhere (the tag sits almost directly above the robot).
+ */
 public class Turret implements Subsystem {
-    //do we want positional PID turret or Velocity PID Turret???
-    //Positional determine desired position for us to be inline with target
-    //Velocity: adjust velocity to stay in line with turret
-    //Problems
-    //Positional: harder to keep track of robot position and goal position
-    //Velocity: easier for oscillations to occur
 
-    //Velocity: uses a limelight mounted to the turret to determine where it should move.
-    //  Whether it needs to move more left or right is determined by offset of
-    //  limelight from center of apriltag on the goal
-    //  this ends in us setting up a velocity PID with the velocity factor
-    //  changing based on position
+  private final PIDFController pidController = new PIDFController(
+      SubsystemConstants.Turret.P,
+      SubsystemConstants.Turret.I,
+      SubsystemConstants.Turret.D,
+      SubsystemConstants.Turret.F,
+      SubsystemConstants.Turret.I_LIMIT,
+      SubsystemConstants.Turret.TOLERANCE_DEGREES);
 
-    //Positional: uses the robots pose on the field and the known pose of the goal to determine
-    //  the angle that the turret should be at. this gives us a target pos (angle) for our turret
-    //  to be at. with a positional PID to do this. This also lets us mount vision elsewhere.
-    //  making it easier hardware wise since the April tag is almost directly above the
-    //  robot by 3 feet.
+  private static final double MAX_TURRET_ANGLE = SubsystemConstants.Turret.MAX_ANGLE;
+  private static final double MIN_TURRET_ANGLE = SubsystemConstants.Turret.MIN_ANGLE;
 
-    //We are using a positional Controller YAY
+  private final DcMotorEx azimuthMotor;
+  private double targetAngleDegrees;
+  // the in-limits copy of the target the PID is driving to; NaN until the first loop
+  private double wrappedTargetDegrees = Double.NaN;
+  private double power;
 
-    //I guess we should use a PIDF controller
-    private double targetAngleDegrees; //degreesdfCoefficients.)
-    private double currentAngleDegrees;
-    private PIDFController pidController = new PIDFController(
-            SubsystemConstants.Turret.P,
-            SubsystemConstants.Turret.I,
-            SubsystemConstants.Turret.D,
-            SubsystemConstants.Turret.F
-    );
+  public Turret(HardwareMap hardwareMap) {
+    azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor"));
+    azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    resetEncoder();
 
-    //motors be important
-    private DcMotorEx azimuthMotor;
-    private double power;
+    targetAngleDegrees = 0;
+  }
 
-    public Turret(HardwareMap hardwareMap){
-        azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor"));
-        azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        resetEncoder();
+  private void resetEncoder() {
+    azimuthMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    azimuthMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+  }
 
-        currentAngleDegrees = getCurrentAngleDegrees();
-        targetAngleDegrees = 0;
+  /// Set the target angle. Any angle is accepted; periodic() wraps it into the turret's limits.
+  /// @param targetAngle target angle in degrees
+  public void setTargetAngleDegrees(double targetAngle) {
+    targetAngleDegrees = targetAngle;
+  }
 
-        pidController.setTolerance(10);
+  private double normalize(double angle) {
+    return ((angle + 180) % 360 + 360) % 360 - 180;
+  }
+
+  public double getTargetAngleDegrees() {
+    return targetAngleDegrees;
+  }
+
+  public double getCurrentAngleDegrees() {
+    return azimuthMotor.getCurrentPosition() / SubsystemConstants.Turret.TICKS_PER_REV * 360.0;
+  }
+
+  public double getPowerSetpoint() {
+    return power;
+  }
+
+  /** True once the turret is within TOLERANCE_DEGREES of its target. Updated each periodic(). */
+  public boolean isAtTarget() {
+    return pidController.atSetPoint();
+  }
+
+  @Override
+  public void periodic() {
+    double currentAngle = getCurrentAngleDegrees();
+    wrappedTargetDegrees = wrapAround(targetAngleDegrees, currentAngle);
+    power = pidController.calculate(currentAngle, wrappedTargetDegrees);
+    // PID output is unbounded; cap it before it reaches the motor
+    power = Range.clip(power, -SubsystemConstants.Turret.MAX_POWER, SubsystemConstants.Turret.MAX_POWER);
+    azimuthMotor.setPower(power);
+  }
+
+  /**
+   * Picks the copy of {@code desiredAngle} (desiredAngle + 360 * k) that lies inside
+   * [MIN_TURRET_ANGLE, MAX_TURRET_ANGLE] and is closest to {@code currentAngle}. If no copy fits
+   * (limits narrower than 360), the angle is clamped to the limits instead.
+   *
+   * <p>To stop it flipping between two copies that are about equally far away, it keeps the copy
+   * it was already driving to unless another one is closer by WRAP_HYSTERESIS_DEGREES.
+   */
+  private double wrapAround(double desiredAngle, double currentAngle) {
+    double closestToCurrent = Double.NaN;
+    double closestToCurrentDist = Double.POSITIVE_INFINITY;
+    double closestToPrevious = Double.NaN; // the copy that continues the previous target
+    double closestToPreviousDist = Double.POSITIVE_INFINITY;
+
+    // lowest number of full turns that could put a copy inside limits
+    int firstTurnCount = (int) Math.ceil((MIN_TURRET_ANGLE - desiredAngle) / 360.0);
+    for (int turnCount = firstTurnCount; desiredAngle + 360 * turnCount <= MAX_TURRET_ANGLE; turnCount++) {
+      double candidate = desiredAngle + 360 * turnCount;
+
+      double distanceToTravel = Math.abs(candidate - currentAngle);
+      if (distanceToTravel < closestToCurrentDist) {
+        closestToCurrentDist = distanceToTravel;
+        closestToCurrent = candidate;
+      }
+
+      // NaN distance (no previous target yet) never wins, so this stays NaN on the first loop
+      double distanceFromPrevious = Math.abs(candidate - wrappedTargetDegrees);
+      if (distanceFromPrevious < closestToPreviousDist) {
+        closestToPreviousDist = distanceFromPrevious;
+        closestToPrevious = candidate;
+      }
     }
 
-    private void resetEncoder(){
-        azimuthMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        azimuthMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    if (Double.isNaN(closestToCurrent)) {
+      return Range.clip(desiredAngle, MIN_TURRET_ANGLE, MAX_TURRET_ANGLE);
     }
-
-
-    ///set target position
-    /// @param targetAngle target angle in degrees
-    public void setTargetAngleDegrees(double targetAngle) {
-        targetAngleDegrees = targetAngle;
+    if (!Double.isNaN(closestToPrevious)
+        && Math.abs(closestToPrevious - currentAngle)
+            <= closestToCurrentDist + SubsystemConstants.Turret.WRAP_HYSTERESIS_DEGREES) {
+      return closestToPrevious;
     }
+    return closestToCurrent;
+  }
 
-    public double getTargetAngleDegrees(){
-        return targetAngleDegrees;
-    }
+  // =========================================================
+  // Ivy commands
+  //
+  // The PID lives in periodic(), which IvyOpMode runs every loop regardless of what is
+  // scheduled, so a command only has to move the target. Requiring this subsystem is what stops
+  // two commands aiming the azimuth at once.
+  // =========================================================
 
-    public double getCurrentAngleDegrees() {
-        return azimuthMotor.getCurrentPosition() / SubsystemConstants.Turret.TICKS_PER_REV * 360.0;
-    }
+  /** Ivy counterpart of {@link #setTargetAngleDegrees(double)}. */
+  public CommandBuilder goToAngle(double targetAngle) {
+    return Commands.instant(() -> setTargetAngleDegrees(targetAngle)).requiring(this);
+  }
 
-    @Override
-    public void periodic(){
-        power = pidController.calculate(getCurrentAngleDegrees(), targetAngleDegrees);
-        azimuthMotor.setPower(power);
-    }
+  // TODO
+  // 1. absolute encoder / homing so the zero survives between OpModes
+  // 2. aiming logic: how to set the target angle
+  // 3. goal coordinate for aiming
+  // 4. tuning
+  // 5. opmode api
 
-    public double getPowerSetpoint() {
-        return power;
-    }
+  // Absolute encoder: gives the angle relative to the robot and a fixed zero. A running total
+  // (no wrap at +/-180) is still needed for the wrap-around math against the turret limits.
+  private double totalPosition = 0;
+  private double lastPosition = 0;
 
-    // =========================================================
-    // Ivy commands
-    //
-    // The PID lives in periodic(), which IvyOpMode runs every loop regardless of what is
-    // scheduled, so a command only has to move the target. Requiring this subsystem is what stops
-    // two commands aiming the azimuth at once.
-    // =========================================================
+  private void updateTotalPosition() {
 
-    /** Ivy counterpart of {@link #setTargetAngleDegrees(double)}. */
-    public CommandBuilder goToAngle(double targetAngle) {
-        return Commands.instant(() -> setTargetAngleDegrees(targetAngle)).requiring(this);
-    }
-
-    /**wrap around funciotn
-     * @param target angle
-     * takes shortest path to angle and sees if it goes outside of bounds
-     * if it does send turret to complementry angle of current position
-     * then tries again.
-     * @retruns a registered command to either continue to target or a new commadn to go
-     * to complementry angle and then targeted angle
-     */
-
-
-    //TODO
-    //1. encoder for current position
-    //2. wrap around logic
-    //3. aiming logic. how to set target atngle
-    //4. goal coordinate for aiming
-    //5. tuning
-    //6. opmode api
-
-
-    //absolute encoder
-    //need to have a total encoder reading too
-    //this be helpful for wrap around
-    //absolute encoder help with angle according to robot
-    //and zeroed angle
-    //total angle help with wrap around
-    //-# doesn't exist for wraparoudn and compliment angle math
-    //when using a aboslute encoder
-    private double totalPostition = 0;
-    private double lastPosition = 0;
-    private void updateTotalPosition(){
-        
-    }
+  }
 }
