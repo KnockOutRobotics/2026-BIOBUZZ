@@ -43,7 +43,7 @@ public class Example extends IvyOpMode {
 }
 ```
 
-Worked examples: `teleop/SwerveTeleOp.java` for teleop, `samples/PedroAutoSample.java` for an
+Worked examples: `OpMode/teleop/SwerveTeleOp.java` for teleop, `samples/PedroAutoSample.java` for an
 autonomous routine, and `samples/PedroCommandsReference.java` for the Pedro commands and the
 composition operators.
 

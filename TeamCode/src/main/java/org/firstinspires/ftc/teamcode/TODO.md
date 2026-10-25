@@ -9,7 +9,7 @@
 - [ ] AutoTune: Tests (line, curve, hold)
 - [ ] Drive `Pedro Swerve TeleOp`; decide on heading lock (`ManualDrive.headingLock` / `driveOrHold`)
 - [ ] Field-centric "forward" per alliance at TeleOp start
-- [ ] Real autonomous routine in `auto/PedroSwerveAuto`
+- [ ] Real autonomous routine in `OpMode/teleop/PedroSwerveAuto`
 - [ ] Retire the old `SwerveDrive` / `SwerveTeleOp` once the Pedro TeleOp drives well
 
 ## Turret

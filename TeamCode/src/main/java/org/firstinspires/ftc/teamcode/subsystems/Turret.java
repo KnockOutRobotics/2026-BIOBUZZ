@@ -4,6 +4,7 @@ import com.pedropathing.ivy.CommandBuilder;
 import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -37,7 +38,8 @@ public class Turret implements Subsystem {
   private double power;
 
   public Turret(HardwareMap hardwareMap) {
-    azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor"));
+    azimuthMotor = new DcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor")) {
+    };
     azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     // TODO set the motor direction so +power moves toward +angle
     // TODO stop zeroing here; zero only when homed (see the TODO list at the bottom)
