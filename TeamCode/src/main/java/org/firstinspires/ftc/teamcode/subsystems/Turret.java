@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.ivy.Subsystem;
-import org.firstinspires.ftc.teamcode.maths.PIDFController;
-import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
+import org.firstinspires.ftc.teamcode.util.PIDFController;
+import org.firstinspires.ftc.teamcode.util.myDcMotorEx;
 
 /**
  * Positional turret: the target angle comes from the robot's pose on the field and the known

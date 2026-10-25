@@ -1,0 +1,10 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+@TeleOp
+public class test {
+    private LynxModule module;
+
+}

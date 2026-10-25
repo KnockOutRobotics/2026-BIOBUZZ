@@ -15,11 +15,11 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.ivy.Subsystem;
-import org.firstinspires.ftc.teamcode.maths.PIDcontroller;
-import org.firstinspires.ftc.teamcode.maths.mathsOperations;
-import org.firstinspires.ftc.teamcode.maths.swerveKinematics;
+import org.firstinspires.ftc.teamcode.util.PIDcontroller;
+import org.firstinspires.ftc.teamcode.util.mathsOperations;
+import org.firstinspires.ftc.teamcode.util.swerveKinematics;
 import org.firstinspires.ftc.teamcode.teleop.SwerveTeleOpConfig;
-import org.firstinspires.ftc.teamcode.utility.myDcMotorEx;
+import org.firstinspires.ftc.teamcode.util.myDcMotorEx;
 
 import java.util.function.DoubleSupplier;
 

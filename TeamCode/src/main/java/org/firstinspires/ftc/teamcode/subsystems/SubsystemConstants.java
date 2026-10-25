@@ -49,7 +49,7 @@ public class SubsystemConstants {
         public static final boolean TURN_REVERSED = true;  // true: +common-mode power turns the pod CW
         public static final boolean DRIVE_REVERSED = false; // true: +differential power drives the wheel backward
 
-        // ---- Pod turn PIDF, on angle error in radians (maths.PIDFController).
+        // ---- Pod turn PIDF, on angle error in radians (util.PIDFController).
         // P = SwerveTeleOpConfig.Kp (0.05/deg, divided by 10 inside PIDcontroller) in radians.
         public static final double TURN_P = 0.29;
         public static final double TURN_I = 0.0;
