@@ -28,4 +28,3 @@ dependencies {
     // FTC Dashboard: @Config in SwerveTeleOpConfig, MultipleTelemetry in SwerveTeleOp.
     implementation 'com.acmerobotics.dashboard:dashboard:0.6.0'
 }
-

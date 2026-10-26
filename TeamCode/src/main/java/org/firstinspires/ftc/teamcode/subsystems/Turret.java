@@ -38,7 +38,7 @@ public class Turret implements Subsystem {
   private double power;
 
   public Turret(HardwareMap hardwareMap) {
-    azimuthMotor = new DcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor")) {
+    azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor")) {
     };
     azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     // TODO set the motor direction so +power moves toward +angle

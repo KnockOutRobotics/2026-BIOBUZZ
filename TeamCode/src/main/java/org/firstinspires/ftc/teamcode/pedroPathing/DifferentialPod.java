@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.util.PIDFController;
-import org.firstinspires.ftc.teamcode.util.mathsOperations;
+import org.firstinspires.ftc.teamcode.util.maths.mathsOperations;
 import org.firstinspires.ftc.teamcode.subsystems.SubsystemConstants.Drive;
 
 import java.util.HashMap;
