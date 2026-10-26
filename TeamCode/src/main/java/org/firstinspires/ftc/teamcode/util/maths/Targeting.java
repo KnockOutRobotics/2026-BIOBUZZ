@@ -25,10 +25,10 @@ class Targeting {
   PoseFactory poseFactory = PoseFactory.degrees();
 
   //label hardcoded value for bottom red goal and generate others via mirror
-  Pose bottomRed = poseFactory.of(58, 55, 0);
-  Pose topRed = poseFactory.of(58, mirror(55), 0);
-  Pose bottomBlue = poseFactory.of(mirror(58), 55, 0);
-  Pose topBlue = poseFactory.of(mirror(58), mirror(55), 0);
+  public Pose bottomRed = poseFactory.of(58, 55, 0);
+  public Pose topRed = poseFactory.of(58, mirror(55), 0);
+  public Pose bottomBlue = poseFactory.of(mirror(58), 55, 0);
+  public Pose topBlue = poseFactory.of(mirror(58), mirror(55), 0);
 
   //returns angle from robot to goal
   double getGlobalAngleDegrees(Pose robot, Pose goal) {
