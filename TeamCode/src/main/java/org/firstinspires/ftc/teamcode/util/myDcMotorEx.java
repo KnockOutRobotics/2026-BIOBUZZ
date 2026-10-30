@@ -32,6 +32,7 @@ public class myDcMotorEx implements DcMotorEx {
     public void setPower(double power) {
         if (Math.abs(power) <= Math.abs(minimum_power)) {
             motor.setPower(0);
+            lastPower = 0;
         } else if (Math.abs(power - lastPower) >= powerStep) {
             motor.setPower(power);
             lastPower = power;

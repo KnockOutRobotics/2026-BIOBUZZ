@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.ivy.Subsystem;
 import org.firstinspires.ftc.teamcode.util.PIDFController;
-import org.firstinspires.ftc.teamcode.util.myDcMotorEx;
 
 /**
  * Positional turret: the target angle comes from the robot's pose on the field and the known
@@ -38,8 +37,7 @@ public class Turret implements Subsystem {
   private double power;
 
   public Turret(HardwareMap hardwareMap) {
-    azimuthMotor = new myDcMotorEx(hardwareMap.get(DcMotorEx.class, "turretMotor")) {
-    };
+    azimuthMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
     azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     // TODO set the motor direction so +power moves toward +angle
     // TODO stop zeroing here; zero only when homed (see the TODO list at the bottom)

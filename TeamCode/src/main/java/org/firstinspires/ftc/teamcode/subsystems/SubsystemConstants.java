@@ -16,6 +16,11 @@ public class SubsystemConstants {
         public final static double WRAP_HYSTERESIS_DEGREES = 20;
     }
 
+    public static class Intake {
+        public static final double NECTAR_POWER = 0.2;
+        public static final double POLLEN_POWER = 0.2;
+    }
+
     /**
      * Differential swerve + Pedro Pathing. Anything set to {@code Double.NaN} has not been measured
      * or tuned yet; {@code pedroPathing.Constants} refuses to build the drivetrain or follower

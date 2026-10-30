@@ -79,3 +79,8 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+# Eclipse/jdtls metadata (generated per machine for Neovim)
+.project
+.classpath
+.settings/
+.factorypath
