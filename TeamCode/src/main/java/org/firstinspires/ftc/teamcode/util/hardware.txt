@@ -1,0 +1,21 @@
+Swerve:
+  Modules 2x:
+    Motor 1 turn
+    Motor 2 drive
+
+Intake:
+  intakes 2x:
+    1 motor drive
+
+Selector:
+  1 pivot drive
+  1 servo pivot
+
+XWheels:
+  2 servo drive
+
+turret:
+  2 servos
+
+launcher:
+  1 motor

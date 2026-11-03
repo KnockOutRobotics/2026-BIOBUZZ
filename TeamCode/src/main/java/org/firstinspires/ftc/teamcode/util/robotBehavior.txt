@@ -1,0 +1,25 @@
+launcher behavior
+  hold launch.
+    spin up
+    feed
+      indexter feed.
+      intake spin to move objects up
+    feed
+
+    right trigger pollen speed
+    left trigger nectar speed
+      
+    let go
+    stop feed
+
+turret behavior
+  auto
+    spin to hive location
+  manual
+    select which hive to target
+
+intake behavior
+  indpendent intake control
+
+  intakes can intake and outtake 
+

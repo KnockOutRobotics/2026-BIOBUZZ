@@ -10,30 +10,52 @@
 - [ ] Drive `Pedro Swerve TeleOp`; decide on heading lock (`ManualDrive.headingLock` / `driveOrHold`)
 - [ ] Field-centric "forward" per alliance at TeleOp start
 - [ ] Real autonomous routine in `OpMode/teleop/PedroSwerveAuto`
-- [ ] Retire the old `SwerveDrive` / `SwerveTeleOp` once the Pedro TeleOp drives well
+- [x] Q2 TeleOp drives through `PedroDrive`; old `SwerveDrive` / `SwerveTeleOp` removed
+
+## Field pose
+- [x] Pose from `PedroDrive.pose()` (pass `drive::pose` to `aimCommand`)
+- [ ] Alliance selection in init loop (picks the goal pose)
+- [ ] Check `Targeting` goal coordinates against the field drawings
 
 ## Turret
-Homing (1:1 incremental encoder):
-- [ ] Pick: carry encoder count across OpModes from a known start, limit switch, or hardstop stall detection
-- [ ] Stop zeroing the encoder in the constructor; add `offsetTicks`, `zeroAt(knownAngle)` and a static `homed` flag
-- [ ] `homeCommand()`: drive slowly until switch/stall, then `zeroAt()`
-- [ ] Skip the PID while not homed; driver button to re-home or zero manually
-- [ ] Limit switch only: re-zero whenever the turret passes it
+Homing (known start: turret centered on the robot at auto setup; TeleOp continues from the saved angle):
+- [x] `new Turret(hm)` in auto, `Turret.continueFromLastAngle(hm)` in TeleOp
+- [ ] Bind `zeroHereCommand()` to a driver button (recovery if the carried-over angle is wrong)
 
 Hardware / config:
-- [ ] `TICKS_PER_REV` = encoder counts per rev
-- [ ] Motor direction
+- [ ] `TICKS_PER_REV` = encoder counts per turret rev (placeholder until the encoder is set up)
+- [ ] Motor direction: +power turns CCW viewed from above
 - [ ] Confirm `MIN_ANGLE` / `MAX_ANGLE` against the cable wrap
 
 Control:
-- [ ] Command that waits for `isAtTarget()` (for shooting in auto)
-- [ ] Tune P/I/D/F, `I_LIMIT`, `TOLERANCE_DEGREES`, `MAX_POWER`
-- [ ] Maybe feedforward to cancel chassis rotation while aiming
+- [x] `waitUntilOnTarget()` command
+- [ ] Tune `TurretTuning` live on Dashboard, copy values back
+- [x] Velocity feedforward while aiming (`TurretTuning.KV`)
 
 Aiming:
-- [ ] Goal coordinate per alliance (Pedro field coordinates)
-- [ ] Target angle from `PedroDrive.pose()`: angle to goal minus robot heading
-- [ ] Aim command that updates the target every loop
+- [x] `aimCommand(poseSupplier, goal)` via `Targeting`
+- [ ] Offset if the turret pivot is not at the robot's center
 
 OpMode:
-- [ ] Register in `PedroSwerveTeleOp` / `PedroSwerveAuto`, add telemetry (target, angle, power)
+- [ ] Register in Q2 TeleOp (`continueFromLastAngle`), add telemetry (target, angle, power)
+
+## Robot / controller behavior (define first)
+Drafts in `util/robotBehavior.txt` and `util/controllerMap.txt`. Finish these before building
+the launcher or filling in Q2 TeleOp.
+- [ ] Launcher behavior
+- [ ] Turret auto/manual behavior (hive selection, "lock turret")
+- [ ] Intake/outtake behavior
+- [ ] Final controller map (driver + operator), pre-match alliance selection
+
+## Launcher
+Not started.
+
+## Intake
+Stays on fixed powers for now (`NECTAR_POWER` / `POLLEN_POWER`).
+
+## Q2 TeleOp
+Kept mostly blank (drive + intake) until behavior is defined.
+- [ ] Register turret and launcher, bindings per the controller map
+
+## Cleanup
+- [ ] Remove `samples/` when no longer needed

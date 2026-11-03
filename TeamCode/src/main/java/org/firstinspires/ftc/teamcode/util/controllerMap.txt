@@ -1,0 +1,26 @@
+Contorller 1 = Driver
+
+    //Field Centric
+    LeftStick x = strafe
+    LeftStick y = forward
+    RightStick X = rotate
+
+    button y = recenter field Centric
+    button b = lock turret
+
+
+Conrtoller 2 = Operator
+
+    left bumper = intake nectar
+    right bumper = intake pollen
+    left stick button = outtake nectar
+    right stick button = outtake pollen
+
+    right trigger = launch pollen
+    left rigger = launch nectar
+    dpad right = right hive
+    dpad left = left hive
+
+
+//pre match needs
+set alliance = to set the hive positions for launcher math.
