@@ -6,18 +6,14 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.CommandBuilder;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 public class Intake implements Subsystem {
   private final DcMotorEx m_Pollen;
   private final DcMotorEx m_Nectar;
-  private final Servo s_indexer;
 
   public Intake(HardwareMap hm) {
     m_Pollen = hm.get(DcMotorEx.class, "pollenMotor");
     m_Nectar = hm.get(DcMotorEx.class, "nectarMotor");
-
-    s_indexer = hm.get(Servo.class, "indexerServo");
   }
 
   // =========================================================
