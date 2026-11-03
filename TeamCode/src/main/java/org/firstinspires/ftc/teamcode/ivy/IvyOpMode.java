@@ -29,7 +29,7 @@ import java.util.Set;
  * <li>{@link #onStart()} -- schedule the autonomous routine or set up {@link #bindings}.</li>
  * <li>{@link #onLoop()} then {@link Scheduler#execute()}, once per loop, until STOP. Button
  *     bindings are polled first, so a command scheduled by a press runs on the same loop.</li>
- * <li>{@link #onStop()}, then the scheduler is cleared.</li>
+ * <li>{@link #onStop()}, each subsystem's {@code onStop()}, then the scheduler is cleared.</li>
  * </ol>
  *
  * <p>Telemetry is pushed once per loop after {@link #onLoop()}; subclasses only need
@@ -151,6 +151,9 @@ public abstract class IvyOpMode extends LinearOpMode {
         }
 
         onStop();
+        for (Subsystem subsystem : subsystems) {
+            subsystem.onStop();
+        }
         Scheduler.reset();
     }
 

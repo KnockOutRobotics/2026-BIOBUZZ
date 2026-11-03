@@ -1,19 +1,15 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 public class SubsystemConstants {
-    public class Turret {
-        public final static double P = 0.0;
-        public final static double I = 0.0;
-        public final static double D = 0.0;
-        public final static double F = 0.0; // static friction: F * sign(error), off inside tolerance
-        public final static double I_LIMIT = 0.2; // most power the I term may add
-        public final static double TOLERANCE_DEGREES = 10;
-        public final static double TICKS_PER_REV = 20.0;
+    // PID gains, tolerance and max power are live-tunable in TurretTuning
+    public static class Turret {
+        public final static double TICKS_PER_REV = 20.0; // TODO placeholder: encoder counts per turret rev
         public final static double MIN_ANGLE = -270;
         public final static double MAX_ANGLE = 270;
-        public final static double MAX_POWER = 1.0; // PID output is clipped to +/- this
         // another copy of the target must be this much closer before the turret switches to it
         public final static double WRAP_HYSTERESIS_DEGREES = 20;
+        // TeleOp only trusts the angle the last OpMode saved if it is at most this old
+        public final static long SAVED_ANGLE_MAX_AGE_MS = 3 * 60 * 1000;
     }
 
     public static class Intake {

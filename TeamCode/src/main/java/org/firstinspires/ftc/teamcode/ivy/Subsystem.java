@@ -37,4 +37,11 @@ public interface Subsystem {
     default Command defaultCommand() {
         return null;
     }
+
+    /**
+     * Runs once when the OpMode stops (not if it is stopped before START). For handing state to
+     * the next OpMode; keep it short, the OpMode is killed soon after.
+     */
+    default void onStop() {
+    }
 }
