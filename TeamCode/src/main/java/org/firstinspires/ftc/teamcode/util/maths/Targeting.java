@@ -3,11 +3,7 @@ package org.firstinspires.ftc.teamcode.util.maths;
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.math.Pose;
 
-import org.jetbrains.annotations.TestOnly;
-
-import java.util.ArrayList;
-
-class Targeting {
+public class Targeting {
 
   // need pose and field.
   // I just want this to have a simple function inside that says
@@ -19,7 +15,7 @@ class Targeting {
 
   //use pedro coordinate system
   //0-144 up an right with originon the bottom left corner of field.
-  Targeting(Pose robotPose) {
+  public Targeting() {
   }
 
   PoseFactory poseFactory = PoseFactory.degrees();
@@ -30,32 +26,27 @@ class Targeting {
   public Pose bottomBlue = poseFactory.of(mirror(58), 55, 0);
   public Pose topBlue = poseFactory.of(mirror(58), mirror(55), 0);
 
-  //returns angle from robot to goal
-  double getGlobalAngleDegrees(Pose robot, Pose goal) {
-    double x = robot.x() - goal.x();
-    double y = robot.y() - goal.y();
+  //returns field angle from robot to goal, in degrees (0 = +x, CCW positive)
+  public double getGlobalAngleDegrees(Pose robot, Pose goal) {
+    double x = goal.x() - robot.x();
+    double y = goal.y() - robot.y();
 
-    double angle = Math.atan(y / x);
-    if (robot.y() > 72) {
-      angle = +180;
-    }
-
-    return angle;
+    // atan2 keeps the quadrant, so no special case is needed for either half of the field
+    return Math.toDegrees(Math.atan2(y, x));
   }
 
-  //returns angle turret should be at
-  //normalized
-  double getRobotAngleDegrees(Pose robot, Pose goal){
-    double angle = getRobotAngleDegrees(robot, goal) - robot.heading();
+  //returns angle turret should be at, relative to the robot's heading
+  //normalized to [0, 360)
+  public double getRobotAngleDegrees(Pose robot, Pose goal){
+    // Pedro headings are radians
+    double angle = getGlobalAngleDegrees(robot, goal) - Math.toDegrees(robot.heading());
 
     //normalize
-    while(!(angle >= 0 && angle <= 360)){
-      if (angle > 360) {
-        angle =- 360;
-      }
-      else {
-        angle =+ 360;
-      }
+    while (angle >= 360) {
+      angle -= 360;
+    }
+    while (angle < 0) {
+      angle += 360;
     }
     return angle;
   }
@@ -64,24 +55,4 @@ class Targeting {
   double mirror(double n) {
     return 72 + (72 - n);
   }
-
-  //test fucntion because mine won't work
-  boolean test(double function, double expected) {
-    return function == expected ? true : false;
-  }
-
-  //run test function | takes test in an array
-  //iterates to see if one fails,
-  //if fail outputs to console
-  void runTest(boolean[] tests) {
-    for (int i = 0; i < tests.length; i++) {
-      if (tests[i] == false) {
-        System.out.println("test failed on: " + tests[i]);
-      }
-    }
-    System.out.println("all test passed");
-  }
 }
-
-  //==================
-
