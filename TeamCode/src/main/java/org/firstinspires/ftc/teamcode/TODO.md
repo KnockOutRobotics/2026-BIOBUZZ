@@ -29,8 +29,8 @@ Hardware / config:
 
 Control:
 - [x] `waitUntilOnTarget()` command
-- [ ] Tune `TurretTuning` live on Dashboard, copy values back
-- [x] Velocity feedforward while aiming (`TurretTuning.KV`)
+- [ ] Tune "Turret" live on Dashboard, copy values back into `SubsystemConstants.Turret`
+- [x] Velocity feedforward while aiming (`SubsystemConstants.Turret.KV`)
 
 Aiming:
 - [x] `aimCommand(poseSupplier, goal)` via `Targeting`

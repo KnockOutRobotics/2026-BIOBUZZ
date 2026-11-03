@@ -12,8 +12,8 @@ public class Intake implements Subsystem {
   private final DcMotorEx m_Nectar;
 
   public Intake(HardwareMap hm) {
-    m_Pollen = hm.get(DcMotorEx.class, "pollenMotor");
-    m_Nectar = hm.get(DcMotorEx.class, "nectarMotor");
+    m_Pollen = hm.get(DcMotorEx.class, SubsystemConstants.Intake.POLLEN_MOTOR);
+    m_Nectar = hm.get(DcMotorEx.class, SubsystemConstants.Intake.NECTAR_MOTOR);
   }
 
   // =========================================================

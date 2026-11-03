@@ -28,15 +28,13 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 public class Turret implements Subsystem {
 
   private final PIDFController pidController = new PIDFController(
-      TurretTuning.P, TurretTuning.I, TurretTuning.D, TurretTuning.F,
-      TurretTuning.I_LIMIT, TurretTuning.TOLERANCE_DEGREES);
+      SubsystemConstants.Turret.P, SubsystemConstants.Turret.I, SubsystemConstants.Turret.D,
+      SubsystemConstants.Turret.F, SubsystemConstants.Turret.I_LIMIT,
+      SubsystemConstants.Turret.TOLERANCE_DEGREES);
   private final Targeting targeting = new Targeting();
 
   private static final double MAX_TURRET_ANGLE = SubsystemConstants.Turret.MAX_ANGLE;
   private static final double MIN_TURRET_ANGLE = SubsystemConstants.Turret.MIN_ANGLE;
-  // feedforward only applies while tracking, i.e. within this many degrees of
-  // the target
-  private static final double FEEDFORWARD_MAX_ERROR_DEGREES = 90;
 
   // "timestamp ms,angle degrees", written when an OpMode stops, so TeleOp
   // starts at auto's angle
@@ -64,7 +62,7 @@ public class Turret implements Subsystem {
   }
 
   private Turret(HardwareMap hardwareMap, double startAngleDegrees) {
-    azimuthMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
+    azimuthMotor = hardwareMap.get(DcMotorEx.class, SubsystemConstants.Turret.MOTOR);
     azimuthMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     // TODO set the motor direction so +power moves toward +angle
     azimuthMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -145,8 +143,8 @@ public class Turret implements Subsystem {
   }
 
   /**
-   * True once the turret is within TurretTuning.TOLERANCE_DEGREES of its
-   * target. Updated each periodic().
+   * True once the turret is within SubsystemConstants.Turret.TOLERANCE_DEGREES
+   * of its target. Updated each periodic().
    */
   public boolean isAtTarget() {
     return pidController.atSetPoint();
@@ -155,8 +153,9 @@ public class Turret implements Subsystem {
   @Override
   public void periodic() {
     // re-read every loop so Dashboard edits take effect live
-    pidController.setGains(TurretTuning.P, TurretTuning.I, TurretTuning.D, TurretTuning.F, TurretTuning.I_LIMIT);
-    pidController.setTolerance(TurretTuning.TOLERANCE_DEGREES);
+    pidController.setGains(SubsystemConstants.Turret.P, SubsystemConstants.Turret.I, SubsystemConstants.Turret.D,
+        SubsystemConstants.Turret.F, SubsystemConstants.Turret.I_LIMIT);
+    pidController.setTolerance(SubsystemConstants.Turret.TOLERANCE_DEGREES);
 
     double currentAngle = getCurrentAngleDegrees();
     double previousWrappedTarget = wrappedTargetDegrees;
@@ -169,12 +168,12 @@ public class Turret implements Subsystem {
     // Far from the target means unwinding to another copy of it, against the
     // target's motion; feeding that motion forward would push the turret into
     // its cable-wrap limit.
-    double feedforward = Math.abs(wrappedTargetDegrees - currentAngle) < FEEDFORWARD_MAX_ERROR_DEGREES
-        ? TurretTuning.KV * targetVelocityDegPerSec
+    double feedforward = Math.abs(wrappedTargetDegrees - currentAngle) < SubsystemConstants.Turret.FEEDFORWARD_MAX_ERROR_DEGREES
+        ? SubsystemConstants.Turret.KV * targetVelocityDegPerSec
         : 0;
     power = pidController.calculate(currentAngle, wrappedTargetDegrees) + feedforward;
     // PID output is unbounded; cap it before it reaches the motor
-    power = Range.clip(power, -TurretTuning.MAX_POWER, TurretTuning.MAX_POWER);
+    power = Range.clip(power, -SubsystemConstants.Turret.MAX_POWER, SubsystemConstants.Turret.MAX_POWER);
     azimuthMotor.setPower(power);
   }
 
@@ -265,7 +264,7 @@ public class Turret implements Subsystem {
             // Targeting returns 0..360, so take the short way across the 0/360
             // seam
             double rawVelocity = normalizeDegrees(angle - lastAimAngle) / dt;
-            aimVelocity += TurretTuning.VELOCITY_FILTER * (rawVelocity - aimVelocity);
+            aimVelocity += SubsystemConstants.Turret.VELOCITY_FILTER * (rawVelocity - aimVelocity);
           }
           lastAimAngle = angle;
           setTargetAngleDegrees(angle, aimVelocity);
@@ -305,6 +304,6 @@ public class Turret implements Subsystem {
   // [ ] TICKS_PER_REV = encoder counts per turret rev
   // [ ] motor direction (constructor): +power turns CCW viewed from above
   // [ ] confirm MIN_ANGLE / MAX_ANGLE against the cable wrap
-  // [ ] tune TurretTuning on Dashboard (KV first, with P at 0), then copy the
-  //   values back
+  // [ ] tune "Turret" on Dashboard (KV first, with P at 0), then copy the
+  //   values back into SubsystemConstants.Turret
 }
