@@ -15,7 +15,7 @@ The glue lives in `ivy/`:
 A subsystem keeps its control loop in `periodic()` and exposes commands as factory methods that
 wrap its plain methods -- `Commands.instant(() -> ...).requiring(this)`, or `Command.build()` for
 anything that runs over several loops. Requiring the subsystem is what stops two commands driving
-the same hardware. See `subsystems/Turret.java` and `SwerveDrive.driveCommand(...)`.
+the same hardware. See `subsystems/Turret.java` and `PedroDrive.driveCommand(...)`.
 [Code Blooded's Decode code](https://github.com/BeepBot99/CodeBloodedDecodeV2) is a good full-season
 example of the same style.
 
@@ -25,25 +25,26 @@ An OpMode then only says what should run:
 @TeleOp
 public class Example extends IvyOpMode {
 
-    private SwerveDrive swerve;
+    private PedroDrive drive;
 
     @Override
     protected void onInit() {
-        swerve = register(new SwerveDrive(telemetry, hardwareMap));
-        setDefaultCommand(swerve.driveCommand(
-                () -> gamepad1.left_stick_x,
-                () -> gamepad1.left_stick_y,
-                () -> -gamepad1.right_stick_x));
+        drive = register(PedroDrive.continueFromLastPose(hardwareMap, new Pose(72, 72, 0)));
+        setDefaultCommand(drive.driveCommand(
+                () -> -gamepad1.left_stick_y,
+                () -> -gamepad1.left_stick_x,
+                () -> -gamepad1.right_stick_x,
+                () -> true));
     }
 
     @Override
     protected void onStart() {
-        bindings.whenPressed(() -> gamepad1.options, swerve.resetIMUCommand());
+        bindings.whenPressed(() -> gamepad1.options, drive.resetDriverForwardCommand());
     }
 }
 ```
 
-Worked examples: `OpMode/teleop/SwerveTeleOp.java` for teleop, `samples/PedroAutoSample.java` for an
+Worked examples: `OpMode/teleop/Q2Teleop.java` for teleop, `samples/PedroAutoSample.java` for an
 autonomous routine, and `samples/PedroCommandsReference.java` for the Pedro commands and the
 composition operators.
 

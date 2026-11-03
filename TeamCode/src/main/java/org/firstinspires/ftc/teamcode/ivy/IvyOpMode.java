@@ -72,7 +72,7 @@ public abstract class IvyOpMode extends LinearOpMode {
     /**
      * Registers a subsystem so its {@code periodic()} and {@code defaultCommand()} are run by the
      * scheduler. Returns the subsystem, so it can be used inline:
-     * {@code swerve = register(new SwerveDrive(telemetry, hardwareMap));}
+     * {@code intake = register(new Intake(hardwareMap));}
      */
     protected final <T extends Subsystem> T register(T subsystem) {
         subsystems.add(subsystem);

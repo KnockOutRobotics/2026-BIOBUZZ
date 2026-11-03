@@ -27,7 +27,7 @@ import java.util.List;
  * {@link Drivetrain} and an {@link Algorithm}:
  *
  * <ul>
- * <li>Localizer -- the Pinpoint, configured as in {@code SwerveTeleOp}.</li>
+ * <li>Localizer -- the Pinpoint, on the goBILDA 4-bar pods.</li>
  * <li>Drivetrain -- Pedro's {@link Swerve} with two {@link DifferentialPod}s (right and left).</li>
  * <li>Algorithm -- {@link Foresight}, with values from the AutoTune Foresight Tuner.</li>
  * </ul>

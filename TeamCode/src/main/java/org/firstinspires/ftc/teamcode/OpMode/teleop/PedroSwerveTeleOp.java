@@ -31,10 +31,10 @@ public class PedroSwerveTeleOp extends IvyOpMode {
 
         // Pedro's convention: forward, strafe left and turn CCW are positive.
         setDefaultCommand(drive.driveCommand(
-                () -> -gamepad1.left_stick_y * SwerveTeleOpConfig.DRIVE_SPEED_SCALAR,
-                () -> -gamepad1.left_stick_x * SwerveTeleOpConfig.DRIVE_SPEED_SCALAR,
-                () -> -gamepad1.right_stick_x * SwerveTeleOpConfig.ROTATION_SPEED_SCALAR,
-                () -> SwerveTeleOpConfig.FIELD_CENTRIC));
+                () -> -gamepad1.left_stick_y * DriveConfig.DRIVE_SPEED_SCALAR,
+                () -> -gamepad1.left_stick_x * DriveConfig.DRIVE_SPEED_SCALAR,
+                () -> -gamepad1.right_stick_x * DriveConfig.ROTATION_SPEED_SCALAR,
+                () -> DriveConfig.FIELD_CENTRIC));
     }
 
     @Override

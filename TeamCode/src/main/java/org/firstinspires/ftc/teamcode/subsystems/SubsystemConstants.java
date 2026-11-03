@@ -23,7 +23,7 @@ public class SubsystemConstants {
      * (and names the missing values) until it is filled in.
      */
     public static class Drive {
-        // ---- Hardware names (same as SwerveDrive). Module 1 is the right pod, module 2 the left.
+        // ---- Hardware names. Module 1 is the right pod, module 2 the left.
         public static final String RIGHT_POD_MOTOR_1 = "mod1m1";
         public static final String RIGHT_POD_MOTOR_2 = "mod1m2";
         public static final String RIGHT_POD_ENCODER = "mod1E";
@@ -38,20 +38,20 @@ public class SubsystemConstants {
         public static final double POD_X_INCHES = Double.NaN; // forward offset; 0 if pods are on the center line
         public static final double POD_Y_INCHES = Double.NaN; // half the distance between the pods
 
-        // ---- Analog pod encoders. Voltage range from SwerveDrive.readEncoder().
+        // ---- Analog pod encoders. Voltage range measured on the old SwerveDrive.
         public static final double ANALOG_MIN_VOLTAGE = 0.043;
         public static final double ANALOG_MAX_VOLTAGE = 3.143;
-        // Raw encoder angle when the wheel points forward (SwerveTeleOpConfig.module1Adjust/2Adjust).
+        // Raw encoder angle when the wheel points forward (carried over from the old SwerveDrive).
         public static final double RIGHT_POD_ANGLE_OFFSET_DEGREES = 35.0;
         public static final double LEFT_POD_ANGLE_OFFSET_DEGREES = 65.0;
 
-        // ---- Directions. Defaults match the signs SwerveDrive.drive() uses.
+        // ---- Directions. Defaults match the signs the old SwerveDrive used.
         public static final boolean ENCODER_INCREASES_CCW = true; // viewed from above
         public static final boolean TURN_REVERSED = true;  // true: +common-mode power turns the pod CW
         public static final boolean DRIVE_REVERSED = false; // true: +differential power drives the wheel backward
 
         // ---- Pod turn PIDF, on angle error in radians (util.PIDFController).
-        // P = SwerveTeleOpConfig.Kp (0.05/deg, divided by 10 inside PIDcontroller) in radians.
+        // P = the old SwerveDrive gain (0.05/deg, divided by 10 inside its PID) in radians.
         public static final double TURN_P = 0.29;
         public static final double TURN_I = 0.0;
         public static final double TURN_D = 0.0;
