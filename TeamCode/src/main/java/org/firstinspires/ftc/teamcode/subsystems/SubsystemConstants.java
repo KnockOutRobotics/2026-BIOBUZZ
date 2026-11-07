@@ -15,25 +15,34 @@ public class SubsystemConstants {
 
   @Config("Turret")
   public static class Turret {
-    public static final String MOTOR = "turretMotor";
+    // ---- Hardware names. Two CR servos drive the turret (infinite rotation); a
+    // MelonBotics encoder geared 1:1 with the turret reports its absolute angle
+    // on an analog port.
+    public static final String SERVO_LEADER = "turretLeader";
+    public static final String SERVO_FOLLOWER = "turretFollower";
+    public static final String ENCODER = "turretEncoder";
 
-    public static final double TICKS_PER_REV = 20.0; // TODO placeholder: encoder counts per turret rev
-    public static final double MIN_ANGLE = -270;
-    public static final double MAX_ANGLE = 270;
-    // another copy of the target must be this much closer before the turret
-    // switches to it
+    // ---- Directions.
+    public static final boolean FOLLOWER_REVERSED = false; // true: the follower servo is mounted mirrored
+    public static final boolean POWER_REVERSED = false; // true: +power turns the turret CW (viewed from above)
+    public static final boolean ENCODER_INCREASES_CCW = true; // viewed from above
+
+    // ---- Analog encoder. TODO placeholders: measure the voltage range and the
+    // offset (Turret Check).
+    public static final double ANALOG_MIN_VOLTAGE = 0.0;
+    public static final double ANALOG_MAX_VOLTAGE = 3.3;
+    // raw encoder angle when the turret faces the robot's front
+    public static final double ANGLE_OFFSET_DEGREES = 0;
+
+    // with the target about 180 degrees away, the turret keeps turning the way
+    // it was going unless the other way is shorter by more than this
     public static final double WRAP_HYSTERESIS_DEGREES = 20;
-    // TeleOp only trusts the angle the last OpMode saved if it is at most this old
-    public static final long SAVED_ANGLE_MAX_AGE_MS = 3 * 60 * 1000;
-    // feedforward only applies while tracking, i.e. within this many degrees of the
-    // target
-    public static final double FEEDFORWARD_MAX_ERROR_DEGREES = 90;
 
     // ---- Live-tunable PIDF (util.PIDFController), on angle error in degrees.
     public static double P = 0.0;
     public static double I = 0.0;
     public static double D = 0.0;
-    public static double F = 0.0; // static friction: F * sign(error), off inside tolerance
+    public static double F = 0.0; // static friction / servo deadband: F * sign(error), off inside tolerance
     public static double I_LIMIT = 0.2; // most power the I term may add
     public static double TOLERANCE_DEGREES = 2;
     public static double MAX_POWER = 1.0; // PID + feedforward is clipped to +/- this

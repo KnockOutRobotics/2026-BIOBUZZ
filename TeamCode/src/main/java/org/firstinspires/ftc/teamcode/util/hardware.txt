@@ -15,7 +15,8 @@ XWheels:
   2 servo drive
 
 turret:
-  2 servos
+  2 CR servos (infinite rotation)
+  1 MelonBotics encoder, absolute analog, 1:1 with turret
 
 launcher:
   1 motor

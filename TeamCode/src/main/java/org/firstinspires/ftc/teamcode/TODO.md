@@ -18,18 +18,19 @@
 - [ ] Check `Targeting` goal coordinates against the field drawings
 
 ## Turret
-Homing (known start: turret centered on the robot at auto setup; TeleOp continues from the saved angle):
-- [x] `new Turret(hm)` in auto, `Turret.continueFromLastAngle(hm)` in TeleOp
-- [ ] Bind `zeroHereCommand()` to a driver button (recovery if the carried-over angle is wrong)
+Infinite rotation, 2 CR servos, MelonBotics encoder (absolute analog, 1:1 with the turret), so
+no homing or saved angle: `new Turret(hm)` everywhere.
 
-Hardware / config:
-- [ ] `TICKS_PER_REV` = encoder counts per turret rev (placeholder until the encoder is set up)
-- [ ] Motor direction: +power turns CCW viewed from above
-- [ ] Confirm `MIN_ANGLE` / `MAX_ANGLE` against the cable wrap
+Hardware / config (bench steps in the `Turret Check` OpMode):
+- [ ] Robot config: `turretLeader` / `turretFollower` (CR servos), `turretEncoder` (analog input)
+- [ ] Measure `ANALOG_MIN_VOLTAGE` / `ANALOG_MAX_VOLTAGE`
+- [ ] `ENCODER_INCREASES_CCW`, `ANGLE_OFFSET_DEGREES`
+- [ ] `FOLLOWER_REVERSED`, `POWER_REVERSED` (+power turns CCW viewed from above)
 
 Control:
 - [x] `waitUntilOnTarget()` command
-- [ ] Tune "Turret" live on Dashboard, copy values back into `SubsystemConstants.Turret`
+- [ ] Tune "Turret" live on Dashboard (F for the servo deadband, then KV with P at 0, then P/D),
+  copy values back into `SubsystemConstants.Turret`
 - [x] Velocity feedforward while aiming (`SubsystemConstants.Turret.KV`)
 
 Aiming:
@@ -37,7 +38,7 @@ Aiming:
 - [ ] Offset if the turret pivot is not at the robot's center
 
 OpMode:
-- [ ] Register in Q2 TeleOp (`continueFromLastAngle`), add telemetry (target, angle, power)
+- [ ] Register in Q2 TeleOp (`new Turret(hm)`), add telemetry (target, angle, power)
 
 ## Robot / controller behavior (define first)
 Drafts in `util/robotBehavior.txt` and `util/controllerMap.txt`. Finish these before building
