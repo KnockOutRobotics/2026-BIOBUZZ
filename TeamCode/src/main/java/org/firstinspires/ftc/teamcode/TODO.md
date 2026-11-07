@@ -2,7 +2,8 @@
 
 ## Drivetrain (differential swerve + Pedro)
 - [ ] `Diffy Pod Check` on a stand: encoder direction, pod angle offsets, `TURN_REVERSED`, `DRIVE_REVERSED`
-- [ ] Tune pod steering PID (`TURN_P/I/D/F` in `SubsystemConstants.Drive`)
+- [ ] Tune pod steering PID with `Drive Pod PID Tuner` (`TURN_P/I/D/F`, live as "Drive" on Dashboard;
+  procedure in `OpMode/tuning/TUNING.md`)
 - [ ] Measure `POD_X_INCHES` / `POD_Y_INCHES` (y is positive to the robot's **right**)
 - [ ] AutoTune: Pinpoint Tuner, then check against the offsets in `pedroPathing/Constants`
 - [ ] AutoTune: Foresight Tuner, copy the 17 values into `SubsystemConstants.Drive`
@@ -29,8 +30,8 @@ Hardware / config (bench steps in the `Turret Check` OpMode):
 
 Control:
 - [x] `waitUntilOnTarget()` command
-- [ ] Tune "Turret" live on Dashboard (F for the servo deadband, then KV with P at 0, then P/D),
-  copy values back into `SubsystemConstants.Turret`
+- [ ] Tune with `Turret PID Tuner` (F for the servo deadband, then KV with P at 0, then P/D;
+  procedure in `OpMode/tuning/TUNING.md`), copy values back into `SubsystemConstants.Turret`
 - [x] Velocity feedforward while aiming (`SubsystemConstants.Turret.KV`)
 
 Aiming:
@@ -49,7 +50,10 @@ the launcher or filling in Q2 TeleOp.
 - [ ] Final controller map (driver + operator), pre-match alliance selection
 
 ## Launcher
-Not started.
+- [x] Flywheel velocity control in `Launcher.periodic()` (`setFlywheelVelocity`, `isFlywheelAtSpeed`)
+- [ ] Tune with `Launcher PID Tuner` (KS/KV sweep, then KP, then shot recovery; procedure in
+  `OpMode/tuning/TUNING.md`), copy values back into `SubsystemConstants.Launcher`
+- [ ] X-wheel / transfer behavior
 
 ## Intake
 Stays on fixed powers for now (`NECTAR_POWER` / `POLLEN_POWER`).

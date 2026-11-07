@@ -9,8 +9,9 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
  * Registers the AutoTune procedures (the robot-hosted tuning page). The tuning library finds the
  * static {@code @Tuner} methods here and lists each one on the page.
  *
- * <p>Order on a new robot: check the pods with the "Diffy Pod Check" OpMode, then Pinpoint Tuner,
- * then Foresight Tuner (copy its output into SubsystemConstants.Drive), then Tests.
+ * <p>Order on a new robot: check the pods with the "Diffy Pod Check" OpMode, tune their steering
+ * with the "Drive Pod PID Tuner" OpMode, then Pinpoint Tuner, then Foresight Tuner (copy its output
+ * into SubsystemConstants.Drive), then Tests. Full procedure: OpMode/tuning/TUNING.md.
  */
 public class Tuning {
 

@@ -116,6 +116,10 @@ public class DifferentialPod implements SwervePod {
             drivePower = -drivePower;
         }
 
+        // re-read every loop so Dashboard edits ("Drive" config) take effect live
+        turnController.setGains(Drive.TURN_P, Drive.TURN_I, Drive.TURN_D, Drive.TURN_F, Drive.TURN_I_LIMIT);
+        turnController.setTolerance(Drive.TURN_TOLERANCE_RADIANS);
+
         double turnPower = 0;
         if (!ignoreAngleChanges) {
             turnPower = Range.clip(
@@ -127,6 +131,22 @@ public class DifferentialPod implements SwervePod {
         double[] powers = mathsOperations.diffyConvert(rotate, translate);
 
         lastTargetRad = target;
+        lastTurnPower = turnPower;
+        lastDrivePower = drivePower;
+        setMotorPowers(powers[0], powers[1]);
+    }
+
+    /**
+     * Open loop, bypassing the steering PID, for the Drive Pod PID Tuner. {@code turnPower} steers
+     * (+ turns CCW viewed from above, once TURN_REVERSED is right) and {@code drivePower} drives the
+     * wheel. The next {@link #move} starts the PID from a clean state.
+     */
+    public void setOpenLoop(double turnPower, double drivePower) {
+        turnController.reset();
+        double rotate = Drive.TURN_REVERSED ? -turnPower : turnPower;
+        double translate = Drive.DRIVE_REVERSED ? -drivePower : drivePower;
+        double[] powers = mathsOperations.diffyConvert(rotate, translate);
+
         lastTurnPower = turnPower;
         lastDrivePower = drivePower;
         setMotorPowers(powers[0], powers[1]);

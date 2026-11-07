@@ -17,7 +17,8 @@ import org.firstinspires.ftc.teamcode.subsystems.SubsystemConstants.Drive;
  *     RIGHT/LEFT_POD_ANGLE_OFFSET_DEGREES.</li>
  * <li>Steering: dpad up/left/down/right sends both pods to 0/90/180/-90 degrees (forward, left,
  *     back, right; 180 shows as 0 with the wheel driving backwards). If a pod spins away instead
- *     of settling, flip TURN_REVERSED. Then tune TURN_P/I/D/F.</li>
+ *     of settling, flip TURN_REVERSED. Then tune TURN_P/I/D/F with the "Drive Pod PID Tuner"
+ *     OpMode (OpMode/tuning/TUNING.md).</li>
  * <li>Drive: hold right trigger. Both wheels should roll the way the pod points; if not, flip
  *     DRIVE_REVERSED.</li>
  * </ul>

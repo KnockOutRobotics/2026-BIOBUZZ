@@ -5,7 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 /**
  * Every subsystem's constants. Fields that are {@code public static} but not
  * {@code final} are
- * live-tunable in FTC Dashboard (the {@link Config} classes, shown as "Turret"
+ * live-tunable in FTC Dashboard (the {@link Config} classes, shown as "Turret", "Drive"
  * and "Launcher")
  * and re-read by the subsystem every loop; copy tuned values back here so they
  * survive a
@@ -105,7 +105,12 @@ public class SubsystemConstants {
    * or tuned yet; {@code pedroPathing.Constants} refuses to build the drivetrain
    * or follower
    * (and names the missing values) until it is filled in.
+   *
+   * <p>
+   * Only the pod turn gains are live-tunable ("Drive" on Dashboard); everything
+   * else is final.
    */
+  @Config("Drive")
   public static class Drive {
     // ---- Hardware names. Module 1 is the right pod, module 2 the left.
     public static final String RIGHT_POD_MOTOR_1 = "mod1m1";
@@ -137,15 +142,17 @@ public class SubsystemConstants {
     public static final boolean TURN_REVERSED = true; // true: +common-mode power turns the pod CW
     public static final boolean DRIVE_REVERSED = false; // true: +differential power drives the wheel backward
 
-    // ---- Pod turn PIDF, on angle error in radians (util.PIDFController).
+    // ---- Live-tunable pod turn PIDF, on angle error in radians
+    // (util.PIDFController), re-read by DifferentialPod every loop. Tune with the
+    // "Drive Pod PID Tuner" OpMode (OpMode/tuning/TUNING.md).
     // P = the old SwerveDrive gain (0.05/deg, divided by 10 inside its PID) in
     // radians.
-    public static final double TURN_P = 0.29;
-    public static final double TURN_I = 0.0;
-    public static final double TURN_D = 0.0;
-    public static final double TURN_F = 0.0; // static friction, F * sign(error)
-    public static final double TURN_I_LIMIT = 0.2;
-    public static final double TURN_TOLERANCE_RADIANS = Math.toRadians(1);
+    public static double TURN_P = 0.29;
+    public static double TURN_I = 0.0;
+    public static double TURN_D = 0.0;
+    public static double TURN_F = 0.0; // static friction, F * sign(error)
+    public static double TURN_I_LIMIT = 0.2;
+    public static double TURN_TOLERANCE_RADIANS = Math.toRadians(1);
     // Skip a motor write unless the power moved by at least this much.
     public static final double MOTOR_CACHING_THRESHOLD = 0.01;
 

@@ -81,6 +81,19 @@ public class Turret implements Subsystem {
     return pidController.atSetPoint();
   }
 
+  /**
+   * Drives the servos at {@code power} directly, bypassing the PID, for the Turret
+   * PID Tuner's open-loop steps. The next periodic() takes over again from a clean
+   * state.
+   */
+  public void setOpenLoopPower(double power) {
+    this.power = power;
+    servos.setPower(SubsystemConstants.Turret.POWER_REVERSED ? -power : power);
+    pidController.reset();
+    continuousAngle = Double.NaN;
+    setpointDegrees = Double.NaN;
+  }
+
   @Override
   public void periodic() {
     pidController.setGains(SubsystemConstants.Turret.P, SubsystemConstants.Turret.I, SubsystemConstants.Turret.D,
